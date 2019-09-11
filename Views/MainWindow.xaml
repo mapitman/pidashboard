@@ -1,0 +1,38 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:pidashboard.ViewModels;assembly=pidashboard"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="pidashboard.Views.MainWindow"
+        Icon="/Assets/avalonia-logo.ico"
+        Title="pidashboard" Width="800" Height="480" Background="#000000">
+
+    <Design.DataContext>
+        <vm:MainWindowViewModel />
+    </Design.DataContext>
+
+    <Window.Styles>
+        <Style Selector="TextBlock.env">
+            <Setter Property="FontSize" Value="32" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+        <Style Selector="TextBlock.normal">
+            <Setter Property="FontSize" Value="32" />
+            <Setter Property="Foreground" Value="#FFFFFF" />
+        </Style>
+    </Window.Styles>
+    <StackPanel Orientation="Horizontal">
+        <StackPanel Orientation="Vertical" Width="250">
+            <TextBlock Classes="env" Text="{Binding Temperature.Text}" Foreground="{Binding Temperature.Foreground}" />
+            <TextBlock Classes="env" Text="{Binding Humidity}" />
+        </StackPanel>
+        <StackPanel HorizontalAlignment="Right">
+            <TextBlock Classes="normal" Text="OAuth: 200" />
+            <TextBlock Classes="normal" Text="Search: 200" />
+            <TextBlock Classes="normal" Text="Download: 200" />
+            <TextBlock Classes="normal" Text="Boards: 200" />
+        </StackPanel>
+    </StackPanel>
+
+</Window>
