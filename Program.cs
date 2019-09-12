@@ -25,6 +25,7 @@ namespace pidashboard
 
             if (((IList) args).Contains("--fbdev"))
             {
+                Console.CursorVisible = false;
                 Console.WriteLine(">> Run in Mode: Framebuffer");
                 AppBuilder.Configure<App>().InitializeWithLinuxFramebuffer(tl =>
                 {
