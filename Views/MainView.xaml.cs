@@ -4,11 +4,10 @@ using pidashboard.ViewModels;
 
 namespace pidashboard.Views
 {
-    public class MainWindow : Window
+    public class MainView : UserControl
     {
-        public MainWindow(MainViewModel viewModel, MainView view)
+        public MainView(MainViewModel viewModel)
         {
-            Content = view;
             DataContext = viewModel;
             InitializeComponent();
         }
@@ -16,7 +15,6 @@ namespace pidashboard.Views
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
-            
         }
     }
 }
