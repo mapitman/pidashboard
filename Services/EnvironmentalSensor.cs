@@ -79,11 +79,19 @@ namespace pidashboard.Services
             {
                 lock (_locker)
                 {
-                    result.Temperature = _sensor.Temperature;
-                    result.Humidity = _sensor.Humidity;
+                    try
+                    {
+                        result.Temperature = _sensor.Temperature;
+                        result.Humidity = _sensor.Humidity;
+                        if (_sensor.IsLastReadSuccessful) _series.Add(result);
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        // TODO: add logging and log this error
+                    }
                 }
 
-                if (_sensor.IsLastReadSuccessful) _series.Add(result);
+                
             }
         }
     }
