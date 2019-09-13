@@ -4,11 +4,12 @@ using System.Linq;
 using System.Threading;
 using Avalonia;
 using Avalonia.Logging.Serilog;
+using Avalonia.Platform;
+using Avalonia.Shared.PlatformSupport;
 using Iot.Device.DHTxx;
 using pidashboard.ViewModels;
 using pidashboard.Views;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using pidashboard.Services;
 
 namespace pidashboard
@@ -52,6 +53,7 @@ namespace pidashboard
             serviceCollection.AddSingleton<MainWindow>();
             serviceCollection.AddSingleton<EnvironmentalSensor>();
             serviceCollection.AddSingleton<MainViewModel>();
+            serviceCollection.AddSingleton<IAssetLoader, AssetLoader>();
             _serviceProvider = serviceCollection.BuildServiceProvider();
         }
 
@@ -83,7 +85,7 @@ namespace pidashboard
                   Console.CursorVisible = true;
                   Console.Clear();
                   Console.WriteLine("Q pressed... exiting...");
-                  Application.Current.Exit();
+                  throw new Exception("Application.Exit doesn't work, so throwing an exception to exit the app :(");
               }
             }
         }

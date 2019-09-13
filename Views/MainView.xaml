@@ -1,66 +1,73 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="clr-namespace:pidashboard.ViewModels;assembly=pidashboard"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="480"
-        x:Class="pidashboard.Views.MainView"
-        Width="800" Height="480">
-    <UserControl.Background>
-        <ImageBrush Source="../Assets/nyan.png"></ImageBrush>
-    </UserControl.Background>
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:pidashboard.ViewModels;assembly=pidashboard"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="480"
+             x:Class="pidashboard.Views.MainView"
+             Width="800" Height="480" Background="#013564">
+    <!-- <UserControl.Background> -->
+    <!--     <ImageBrush Source="../Assets/nyan.png"></ImageBrush> -->
+    <!-- </UserControl.Background> -->
     <UserControl.Styles>
         <Style Selector="TextBlock.normal">
             <Setter Property="FontSize" Value="32" />
             <Setter Property="Foreground" Value="Gray" />
-            <Setter Property="Margin" Value="10,5,0,0"/>
+            <Setter Property="Margin" Value="10,5,0,0" />
         </Style>
         <Style Selector="TextBlock.clock">
             <Setter Property="FontSize" Value="48" />
             <Setter Property="Foreground" Value="Gray" />
-            <Setter Property="Margin" Value="200,50,0,0"/>
+            <Setter Property="Margin" Value="200,50,0,0" />
         </Style>
         <Style Selector="TextBlock.small">
             <Setter Property="FontSize" Value="18" />
             <Setter Property="Foreground" Value="Gray" />
-            <Setter Property="Margin" Value="10,5,0,0"/>
+            <Setter Property="Margin" Value="10,5,0,0" />
         </Style>
         <Style Selector="TextBlock.h1">
             <Setter Property="FontSize" Value="18" />
             <Setter Property="Foreground" Value="Gray" />
-            <Setter Property="Margin" Value="5,20,0,0"/>
+            <Setter Property="Margin" Value="5,20,0,0" />
         </Style>
-        
+
         <Style Selector="TextBlock.good">
             <Setter Property="FontSize" Value="32" />
             <Setter Property="Foreground" Value="#00ff00" />
         </Style>
-        
+
         <Style Selector="TextBlock.bad">
             <Setter Property="FontSize" Value="32" />
             <Setter Property="Foreground" Value="#ff0000" />
         </Style>
-        
+
         <Style Selector="TextBlock.warn">
             <Setter Property="FontSize" Value="32" />
             <Setter Property="Foreground" Value="#ffff00" />
         </Style>
     </UserControl.Styles>
-    <StackPanel Orientation="Horizontal">
-        <StackPanel Orientation="Vertical" Width="300">
-            <TextBlock Classes="h1" Text="Temperature" />
-            <TextBlock Classes="normal" Text="{Binding Temperature.Text}" Foreground="{Binding Temperature.Foreground}"/>
-            <TextBlock Classes="small" Text="{Binding TemperatureHigh.Text}" Foreground="{Binding TemperatureHigh.Foreground}"/>
-            <TextBlock Classes="small" Text="{Binding TemperatureLow.Text}" Foreground="{Binding TemperatureLow.Foreground}"/>
-            <TextBlock Classes="h1" Text="Humidity" />
-            <TextBlock Classes="normal" Text="{Binding Humidity.Text}" Foreground="{Binding Humidity.Foreground}"/>
+    <StackPanel Orientation="Vertical">
+        <StackPanel Orientation="Horizontal">
+            <StackPanel Orientation="Vertical">
+                <TextBlock Classes="h1" Text="Temperature" />
+                <TextBlock Classes="normal" Text="{Binding Temperature.Text}"
+                           Foreground="{Binding Temperature.Foreground}" />
+                <TextBlock Classes="small" Text="{Binding TemperatureHigh.Text}"
+                           Foreground="{Binding TemperatureHigh.Foreground}" />
+                <TextBlock Classes="small" Text="{Binding TemperatureLow.Text}"
+                           Foreground="{Binding TemperatureLow.Foreground}" />
+                <TextBlock Classes="h1" Text="Humidity" />
+                <TextBlock Classes="normal" Text="{Binding Humidity.Text}" Foreground="{Binding Humidity.Foreground}" />
+            </StackPanel>
+            <StackPanel HorizontalAlignment="Left">
+                <TextBlock Classes="clock" Text="{Binding CurrentTime.Text}" HorizontalAlignment="Left"
+                           TextAlignment="Left" />
+                <!-- <TextBlock Classes="good" Text="OAuth: 200" /> -->
+                <!-- <TextBlock Classes="good" Text="Search: 200" /> -->
+                <!-- <TextBlock Classes="good" Text="Download: 200" /> -->
+                <!-- <TextBlock Classes="bad" Text="Boards: 500" /> -->
+            </StackPanel>
         </StackPanel>
-        <StackPanel HorizontalAlignment="Right">
-            <TextBlock Classes="clock" Text="{Binding CurrentTime.Text}" HorizontalAlignment="Right" TextAlignment="Right"/>
-            <!-- <TextBlock Classes="good" Text="OAuth: 200" /> -->
-            <!-- <TextBlock Classes="good" Text="Search: 200" /> -->
-            <!-- <TextBlock Classes="good" Text="Download: 200" /> -->
-            <!-- <TextBlock Classes="bad" Text="Boards: 500" /> -->
-        </StackPanel>
+        <Image Source="{Binding ImageFrame}" />
     </StackPanel>
 </UserControl>

@@ -1,6 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
+using System.IO;
+using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Platform;
 using Avalonia.Threading;
+using Newtonsoft.Json;
 using pidashboard.Services;
 using ReactiveUI;
 
@@ -9,6 +15,7 @@ namespace pidashboard.ViewModels
     public class MainViewModel : ViewModelBase
     {
         private readonly EnvironmentalSensor _environmentalSensor;
+        private readonly IAssetLoader _assets;
         private ViewItem _temperature = new ViewItem("n/a");
         private ViewItem _temperatureHigh = new ViewItem("High: n/a");
         private ViewItem _temperatureLow = new ViewItem("Low: n/a");
@@ -18,19 +25,41 @@ namespace pidashboard.ViewModels
         private double _lowTemp;
         private DateTime _lowTempDateTime = DateTime.MinValue;
         private ViewItem _currentTime = new ViewItem("00:00");
+        private Bitmap _imageFrame;
+        private Bitmap[] _frames;
+        private int _currentFrame = 0;
 
-        public MainViewModel(EnvironmentalSensor environmentalSensor)
+        public MainViewModel(EnvironmentalSensor environmentalSensor, IAssetLoader assets)
         {
             _environmentalSensor = environmentalSensor;
+            _assets = assets;
+            _frames = new Bitmap[]
+            {
+                new Bitmap(_assets.Open(new Uri("avares://pidashboard/Assets/nyan-0.png", UriKind.Absolute))), 
+                new Bitmap(_assets.Open(new Uri("avares://pidashboard/Assets/nyan-1.png", UriKind.Absolute))),
+                new Bitmap(_assets.Open(new Uri("avares://pidashboard/Assets/nyan-2.png", UriKind.Absolute))),
+                new Bitmap(_assets.Open(new Uri("avares://pidashboard/Assets/nyan-3.png", UriKind.Absolute)))
+            };
+            
             EnvironmentalDataUpdater();
             CurrentTimeUpdater();
-            DispatcherTimer.Run(EnvironmentalDataUpdater, TimeSpan.FromSeconds(5));
+            DispatcherTimer.Run(EnvironmentalDataUpdater, TimeSpan.FromSeconds(30));
             DispatcherTimer.Run(CurrentTimeUpdater, TimeSpan.FromSeconds(1));
+            DispatcherTimer.Run(NyanCatenator, TimeSpan.FromMilliseconds(150));
+        }
+
+        private bool NyanCatenator()
+        {
+            ImageFrame = _frames[_currentFrame];
+            _currentFrame++;
+            if (_currentFrame > 3)
+                _currentFrame = 0;
+            return true;
         }
 
         private bool CurrentTimeUpdater()
         {
-            CurrentTime.Text = DateTime.Now.ToShortTimeString();
+            CurrentTime.Text = DateTime.Now.ToLongTimeString();
             return true;
         }
 
@@ -52,8 +81,6 @@ namespace pidashboard.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _temperatureLow, value);
         }
         
-
-
         public ViewItem Humidity
         {
             get => _humidity;
@@ -66,35 +93,64 @@ namespace pidashboard.ViewModels
             private set => this.RaiseAndSetIfChanged(ref _currentTime, value);
         }
 
+        public Bitmap ImageFrame
+        {
+            get => _imageFrame;
+            set =>  this.RaiseAndSetIfChanged(ref _imageFrame, value);
+        }
+
         private bool EnvironmentalDataUpdater()
         {
-            var d = _environmentalSensor.GetData();
-            Temperature.Text = $"{d.Temperature.Fahrenheit:F2}° F";
-            Temperature.Foreground = DetermineTemperatureColor(d.Temperature.Fahrenheit);
-            Humidity.Text = $"{d.Humidity:F1}%";
-            var now = DateTime.Now;
-            if (d.Temperature.Fahrenheit > _highTemp || now > _highTempDateTime.AddDays(1))
+            var d = _environmentalSensor.Data;
+            if (d != null)
             {
-                _highTemp = d.Temperature.Fahrenheit;
-                _highTempDateTime = now;
-                _temperatureHigh.Text = $"High: {_highTemp:F2}° F @ {_highTempDateTime.ToShortTimeString()}";
+                Temperature.Text = $"{d.Temperature.Fahrenheit:F2}° F";
+                Temperature.Foreground = DetermineTemperatureColor(d.Temperature.Fahrenheit);
+                Humidity.Text = $"{d.Humidity:F1}%";
+                var now = DateTime.Now;
+                if (d.Temperature.Fahrenheit > _highTemp || now > _highTempDateTime.AddDays(1))
+                {
+                    _highTemp = d.Temperature.Fahrenheit;
+                    _highTempDateTime = now;
+                    _temperatureHigh.Text = $"High: {_highTemp:F2}° F @ {_highTempDateTime.ToShortTimeString()}";
+                }
+
+                if (d.Temperature.Fahrenheit < _lowTemp || now > _lowTempDateTime.AddDays(1))
+                {
+                    _lowTemp = d.Temperature.Fahrenheit;
+                    _lowTempDateTime = now;
+                    _temperatureLow.Text = $"Low:  {_lowTemp:F2}° F @ {_lowTempDateTime.ToShortTimeString()}";
+                }
+
+                WriteEnvironmentalDataToFile(d);
+            }
+
+            return true;
+        }
+
+        private void WriteEnvironmentalDataToFile(EnvironmentalSensorData environmentalSensorData)
+        {
+            var data = new EnvironmentalData
+            {
+                Fahrenheit = environmentalSensorData.Temperature.Fahrenheit,
+                Humidity = environmentalSensorData.Humidity
+            };
+            using (var file = File.CreateText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
+                ".temperature.json")))
+            {
+                var serializer = new JsonSerializer();
+                serializer.Serialize(file, data);
+                file.Flush();
             }
             
-            if (d.Temperature.Fahrenheit < _lowTemp || now > _lowTempDateTime.AddDays(1))
-            {
-                _lowTemp = d.Temperature.Fahrenheit;
-                _lowTempDateTime = now;
-                _temperatureLow.Text = $"Low:  {_lowTemp:F2}° F @ {_lowTempDateTime.ToShortTimeString()}";
-            }
-            return true;
         }
 
         private static SolidColorBrush DetermineTemperatureColor(double temperature)
         {
             var color = Colors.Green;
-            if (temperature > 74 && temperature < 77)
+            if (temperature > 73 && temperature <= 76)
                 color = Colors.Yellow;
-            else if (temperature >= 77) color = Colors.Red;
+            else if (temperature > 76) color = Colors.Red;
             return new SolidColorBrush(color);
         }
     }
@@ -120,5 +176,11 @@ namespace pidashboard.ViewModels
             get => _foreground;
             set => this.RaiseAndSetIfChanged(ref _foreground, value);
         }
+    }
+
+    public class EnvironmentalData
+    {
+        public double Fahrenheit { get; set; }
+        public double Humidity { get; set; }
     }
 }
