@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -12,7 +13,7 @@ namespace pidashboard.Services
         private readonly Timer _dataUpdateTimer;
         private readonly DhtBase _sensor;
         private readonly Timer _sensorReadTimer;
-        private readonly List<EnvironmentalSensorData> _series = new List<EnvironmentalSensorData>();
+        private readonly ConcurrentBag<EnvironmentalSensorData> _series = new ConcurrentBag<EnvironmentalSensorData>();
         private object _locker = new object();
 
         public EnvironmentalSensor(DhtWrapper sensor)
@@ -27,18 +28,20 @@ namespace pidashboard.Services
         private void UpdateData(object state)
         {
             if (_series.Count < 10) return;
+            var seriesCopy = new List<EnvironmentalSensorData>(_series);
+            _series.Clear();
             var result = new EnvironmentalSensorData();
             var standardFactor = 2.0;
-            var temperatureMean = _series.Average(x => x.Temperature.Fahrenheit);
+            var temperatureMean = seriesCopy.Average(x => x.Temperature.Fahrenheit);
             var temperatureStandardDeviation =
-                Math.Sqrt(_series.Select(x => Math.Pow(x.Temperature.Fahrenheit - temperatureMean, 2)).Sum() /
-                          _series.Count);
+                Math.Sqrt(seriesCopy.Select(x => Math.Pow(x.Temperature.Fahrenheit - temperatureMean, 2)).Sum() /
+                          seriesCopy.Count);
 
             double filteredTemperature;
             if (Math.Abs(temperatureStandardDeviation) < 1)
-                filteredTemperature = _series.First().Temperature.Fahrenheit;
+                filteredTemperature = seriesCopy.First().Temperature.Fahrenheit;
             else
-                filteredTemperature = _series.Where(x =>
+                filteredTemperature = seriesCopy.Where(x =>
                         x.Temperature.Fahrenheit >
                         temperatureMean - standardFactor * temperatureStandardDeviation)
                     .Where(x => x.Temperature.Fahrenheit <
@@ -47,15 +50,15 @@ namespace pidashboard.Services
 
             result.Temperature = Temperature.FromFahrenheit(filteredTemperature);
 
-            var humidityMean = _series.Average(x => x.Humidity);
+            var humidityMean = seriesCopy.Average(x => x.Humidity);
             var humidityStandardDeviation =
-                Math.Sqrt(_series.Select(x => Math.Pow(x.Humidity - humidityMean, 2)).Sum() / _series.Count);
+                Math.Sqrt(seriesCopy.Select(x => Math.Pow(x.Humidity - humidityMean, 2)).Sum() / seriesCopy.Count);
 
             double filteredHumidity;
             if (Math.Abs(humidityStandardDeviation) < 1)
-                filteredHumidity = _series.First().Humidity;
+                filteredHumidity = seriesCopy.First().Humidity;
             else
-                filteredHumidity = _series.Where(x =>
+                filteredHumidity = seriesCopy.Where(x =>
                         x.Humidity > humidityMean - standardFactor * humidityStandardDeviation)
                     .Where(x => x.Humidity < humidityMean + standardFactor * humidityStandardDeviation)
                     .Average(x => x.Humidity);
@@ -63,7 +66,6 @@ namespace pidashboard.Services
             result.Humidity = filteredHumidity;
 
             Data = result;
-            _series.Clear();
         }
 
         private void ReadData(object state)
