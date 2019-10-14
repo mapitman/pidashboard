@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO;
-using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using Avalonia.Threading;
-using Newtonsoft.Json;
 using pidashboard.Services;
 using ReactiveUI;
 
@@ -14,8 +10,8 @@ namespace pidashboard.ViewModels
 {
     public class MainViewModel : ViewModelBase
     {
-        private readonly EnvironmentalSensor _environmentalSensor;
         private readonly IAssetLoader _assets;
+        private readonly TemperatureService _temperatureService;
         private ViewItem _temperature = new ViewItem("n/a");
         private ViewItem _temperatureHigh = new ViewItem("High: n/a");
         private ViewItem _temperatureLow = new ViewItem("Low: n/a");
@@ -29,11 +25,11 @@ namespace pidashboard.ViewModels
         private Bitmap[] _frames;
         private int _currentFrame = 0;
 
-        public MainViewModel(EnvironmentalSensor environmentalSensor, IAssetLoader assets)
+        public MainViewModel(IAssetLoader assets, TemperatureService temperatureService)
         {
-            _environmentalSensor = environmentalSensor;
             _assets = assets;
-            _frames = new Bitmap[]
+            _temperatureService = temperatureService;
+            _frames = new[]
             {
                 new Bitmap(_assets.Open(new Uri("avares://pidashboard/Assets/nyan-0.png", UriKind.Absolute))), 
                 new Bitmap(_assets.Open(new Uri("avares://pidashboard/Assets/nyan-1.png", UriKind.Absolute))),
@@ -101,51 +97,31 @@ namespace pidashboard.ViewModels
 
         private bool EnvironmentalDataUpdater()
         {
-            var d = _environmentalSensor.Data;
-            if (d != null)
+            var d = _temperatureService.GetCurrentTemperature();
+            if (d.HasValue)
             {
-                Temperature.Text = $"{d.Temperature.Fahrenheit:F2}° F";
-                Temperature.Foreground = DetermineTemperatureColor(d.Temperature.Fahrenheit);
-                Humidity.Text = $"{d.Humidity:F1}%";
+                Temperature.Text = $"{d:F2}° F";
+                Temperature.Foreground = DetermineTemperatureColor(d.Value);
                 var now = DateTime.Now;
-                if (d.Temperature.Fahrenheit > _highTemp || now > _highTempDateTime.AddDays(1))
+                if (d > _highTemp || now > _highTempDateTime.AddDays(1))
                 {
-                    _highTemp = d.Temperature.Fahrenheit;
+                    _highTemp = d.Value;
                     _highTempDateTime = now;
                     _temperatureHigh.Text = $"High: {_highTemp:F2}° F @ {_highTempDateTime.ToShortTimeString()}";
                 }
 
-                if (d.Temperature.Fahrenheit < _lowTemp || now > _lowTempDateTime.AddDays(1))
+                if (d < _lowTemp || now > _lowTempDateTime.AddDays(1))
                 {
-                    _lowTemp = d.Temperature.Fahrenheit;
+                    _lowTemp = d.Value;
                     _lowTempDateTime = now;
                     _temperatureLow.Text = $"Low:  {_lowTemp:F2}° F @ {_lowTempDateTime.ToShortTimeString()}";
                 }
-
-                WriteEnvironmentalDataToFile(d);
             }
 
             return true;
         }
 
-        private void WriteEnvironmentalDataToFile(EnvironmentalSensorData environmentalSensorData)
-        {
-            var data = new EnvironmentalData
-            {
-                Fahrenheit = environmentalSensorData.Temperature.Fahrenheit,
-                Humidity = environmentalSensorData.Humidity
-            };
-            using (var file = File.CreateText(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-                ".temperature.json")))
-            {
-                var serializer = new JsonSerializer();
-                serializer.Serialize(file, data);
-                file.Flush();
-            }
-            
-        }
-
-        private static SolidColorBrush DetermineTemperatureColor(double temperature)
+       private static SolidColorBrush DetermineTemperatureColor(double temperature)
         {
             var color = Colors.Green;
             if (temperature > 73 && temperature <= 76)

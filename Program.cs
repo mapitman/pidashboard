@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections;
-using System.Linq;
+using System.IO;
 using System.Threading;
 using Avalonia;
 using Avalonia.Logging.Serilog;
 using Avalonia.Platform;
 using Avalonia.Shared.PlatformSupport;
-using Iot.Device.DHTxx;
+using Microsoft.Extensions.Configuration;
 using pidashboard.ViewModels;
 using pidashboard.Views;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,19 +41,21 @@ namespace pidashboard
 
         private static void RegisterServices(string[] args)
         {
+            var builder = new ConfigurationBuilder()
+                .AddYamlFile("appsettings.yaml")
+                .AddYamlFile($"appsettings.{Environment.GetEnvironmentVariable("ENVIRONMENT")}.yaml", true);
+
+            var configuration = builder.Build();
+
             var serviceCollection = new ServiceCollection();
-            DhtBase dhtsensor = null;
-            if (!args.Contains("--fake"))
-            {
-                dhtsensor = new Dht22(2);
-            }
-            
-            serviceCollection.AddSingleton<DhtWrapper>(x => new DhtWrapper(dhtsensor));
+
+            serviceCollection.AddSingleton<IConfiguration>(configuration);
             serviceCollection.AddSingleton<MainView>();
             serviceCollection.AddSingleton<MainWindow>();
-            serviceCollection.AddSingleton<EnvironmentalSensor>();
             serviceCollection.AddSingleton<MainViewModel>();
             serviceCollection.AddSingleton<IAssetLoader, AssetLoader>();
+            serviceCollection.AddSingleton<TemperatureService>();
+            serviceCollection.AddHttpClient();
             _serviceProvider = serviceCollection.BuildServiceProvider();
         }
 

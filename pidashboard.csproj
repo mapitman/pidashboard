@@ -21,8 +21,17 @@
     <PackageReference Include="Avalonia.ReactiveUI" Version="0.8.2" />
     <PackageReference Include="Avalonia.Skia" Version="0.8.2" />
     <PackageReference Include="Avalonia.Skia.Linux.Natives" Version="1.68.0.2" />
-    <PackageReference Include="IoT.Device.Bindings" Version="1.0.0-prerelease.19413.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.0.0" />
+    <PackageReference Include="microsoft.extensions.http" Version="3.0.0" />
+    <PackageReference Include="NetEscapades.Configuration.Yaml" Version="1.6.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="appsettings.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.development.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>
