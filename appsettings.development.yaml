@@ -1,1 +1,2 @@
 TemperatureUri: http://mini-display/temperature
+HumidityUri: http://mini-display/humidity

@@ -97,25 +97,31 @@ namespace pidashboard.ViewModels
 
         private bool EnvironmentalDataUpdater()
         {
-            var d = _temperatureService.GetCurrentTemperature();
-            if (d.HasValue)
+            var temperature = _temperatureService.GetCurrentTemperature();
+            if (temperature.HasValue)
             {
-                Temperature.Text = $"{d:F2}° F";
-                Temperature.Foreground = DetermineTemperatureColor(d.Value);
+                Temperature.Text = $"{temperature:F2}° F";
+                Temperature.Foreground = DetermineTemperatureColor(temperature.Value);
                 var now = DateTime.Now;
-                if (d > _highTemp || now > _highTempDateTime.AddDays(1))
+                if (temperature > _highTemp || now > _highTempDateTime.AddDays(1))
                 {
-                    _highTemp = d.Value;
+                    _highTemp = temperature.Value;
                     _highTempDateTime = now;
                     _temperatureHigh.Text = $"High: {_highTemp:F2}° F @ {_highTempDateTime.ToShortTimeString()}";
                 }
 
-                if (d < _lowTemp || now > _lowTempDateTime.AddDays(1))
+                if (temperature < _lowTemp || now > _lowTempDateTime.AddDays(1))
                 {
-                    _lowTemp = d.Value;
+                    _lowTemp = temperature.Value;
                     _lowTempDateTime = now;
                     _temperatureLow.Text = $"Low:  {_lowTemp:F2}° F @ {_lowTempDateTime.ToShortTimeString()}";
                 }
+            }
+
+            var humidity = _temperatureService.GetCurrentHumidity();
+            if (humidity.HasValue)
+            {
+                Humidity.Text = $"{humidity:F2}";
             }
 
             return true;

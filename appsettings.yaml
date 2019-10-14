@@ -1,1 +1,2 @@
 TemperatureUri: http://localhost/temperature
+HumidityUri: http://localhost/humidity

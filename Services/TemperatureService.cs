@@ -30,5 +30,19 @@ namespace pidashboard.Services
 
             return result;
         } 
+        
+        public double? GetCurrentHumidity()
+        {
+            var client = _httpClientFactory.CreateClient();
+            var response = client.GetAsync(_configuration["HumidityUri"]).Result;
+            var body = response.Content.ReadAsStringAsync().Result;
+            var result = JsonConvert.DeserializeObject<double>(body);
+            if (result == Double.MinValue)
+            {
+                return null;
+            }
+
+            return result;
+        } 
     }
 }
